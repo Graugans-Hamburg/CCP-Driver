@@ -21,12 +21,6 @@
 #define _CCP_DRIVER_H_
 
 /*
- * Generic Defines
- */
-#define LITTLE_ENDIANNESS			0x00
-#define BIG_ENDIANNESS				0x01
-
-/*
  * Configure the CCP Driver
  */
 
@@ -115,6 +109,7 @@ void callback_GET_CCP_VERSION(uint8_t * ptr_first_byte_cmd);
 void callback_SET_MTA(uint8_t * ptr_first_byte_cmd);
 void callback_UPLOAD(uint8_t * ptr_first_byte_cmd);
 void callback_DNLOAD(uint8_t * ptr_first_byte_cmd);
+void callback_SHORT_UP(uint8_t * ptr_first_byte_cmd);
 
 
 #endif /* 44_CCP_CCP_DRIVER_H_ */

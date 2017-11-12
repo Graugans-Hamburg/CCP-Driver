@@ -62,6 +62,8 @@ void CRO_analyse(uint8_t * ptr_first_byte_cmd)
 		case COMMAND_DNLOAD:
 			callback_DNLOAD(ptr_first_byte_cmd);
 			break;
+		case COMMAND_SHORT_UP:
+			callback_SHORT_UP(ptr_first_byte_cmd);
 		default:
 
 			break;
@@ -76,13 +78,9 @@ void callback_CONNECT(uint8_t * ptr_first_byte_cmd)
 	uint8_t  *ptr_CRO_ctr = ptr_first_byte_cmd + 1;  // byte 2 Command Counter
 
 	uint16_t CRO_station_address;
-	#if CONTROLER_ENDIANNESS == LITTLE_ENDIANNESS
-		CRO_station_address = *((uint16_t * )( ptr_first_byte_cmd + 2 ));  // byte 3 and 4
-	#endif
-	#if CONTROLER_ENDIANNESS == BIG_ENDIANNESS
-		CRO_station_address =  (*((uint16_t *)(ptr_first_byte_cmd + 2))) << 2;  // byte 3 and 4
-		CRO_station_address = CRO_station_address + (uint16_t)(*(ptr_first_byte_cmd + 3));  // byte 3 and 4
-	#endif
+
+		CRO_station_address = *(ptr_first_byte_cmd + 2);  								// byte 3 little endian
+		CRO_station_address = CRO_station_address + (*(ptr_first_byte_cmd + 2)) * 256;	// byte 4 little endian
 
 	// Check if the station ID is the correct one
 	if(CRO_station_address == STATION_ADDRESS)
@@ -237,6 +235,44 @@ void callback_DNLOAD(uint8_t * ptr_first_byte_cmd)
 		answer[BYTE_POSITION_CTR] = *ptr_CRO_ctr;
 		send_DTO(answer);
 	}
+}
+
+void callback_SHORT_UP(uint8_t * ptr_first_byte_cmd)
+{
+	uint8_t answer[8];
+
+	uint8_t *ptr_CRO_ctr              = ptr_first_byte_cmd + 1;  // byte 2 Command Counter
+	uint8_t *ptr_CRO_upload_size      = ptr_first_byte_cmd + 2;  // byte 3 Number of Bytes that shall be uploaded
+	uint8_t *ptr_address_extention    = ptr_first_byte_cmd + 3;  // byte 3 Number of Bytes that shall be uploaded
+
+	uint8_t array_address_bytes[4];
+	array_address_bytes[0] = *(ptr_first_byte_cmd + 4);
+	array_address_bytes[1] = *(ptr_first_byte_cmd + 5);
+	array_address_bytes[2] = *(ptr_first_byte_cmd + 6);
+	array_address_bytes[3] = *(ptr_first_byte_cmd + 7);
+	uint32_t *ptr_CRO_address_info 		  = (uint32_t * )( array_address_bytes );
+	uint8_t * ptr_CRO_address = (uint8_t *)(*ptr_CRO_address_info);
+
+	// Check if the station ID is the correct one
+		if(CCP_status.connection_status == CONNECTED)
+		{
+			uint8_t i;
+			if (*ptr_CRO_upload_size > 0 && *ptr_CRO_upload_size < 5)
+			{
+				answer[BYTE_POSITION_CRC] = CRC_ACKNOWLEGE;
+				for(i = 0; i < *ptr_CRO_upload_size;i++ )
+				{
+					*(answer + BYTE_POSITION_DATA + i) = *(ptr_CRO_address++);
+				}
+			}
+			else
+			{
+				answer[BYTE_POSITION_CRC] = CRC_PARAMETER_OUT_OF_RANGE;
+			}
+			answer[BYTE_POSITION_PID] = 0xFF;
+			answer[BYTE_POSITION_CTR] = *ptr_CRO_ctr;
+			send_DTO(answer);
+		}
 }
 
 /*
