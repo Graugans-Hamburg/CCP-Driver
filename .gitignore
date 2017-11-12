@@ -1,0 +1,11 @@
+# Erstmal alles ignorieren
+*
+
+# Verzeichnis /a/b/c/ "un-ignorieren"
+!.gitignore
+!CCP_driver.c
+!CCP_driver.h
+
+# Noch ist die Dokumentation nicht so weit
+#!doc/
+#!/doc/*
