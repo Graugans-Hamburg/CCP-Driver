@@ -87,16 +87,10 @@ void callback_CONNECT(uint8_t * ptr_first_byte_cmd)
 	{
 		CCP_status.connection_status = CONNECTED;
 		answer[BYTE_POSITION_CRC] = CRC_ACKNOWLEGE;
+		answer[BYTE_POSITION_PID] = 0xFF;
+		answer[BYTE_POSITION_CTR] = *ptr_CRO_ctr;
+		send_DTO(answer);
 	}
-	else
-	{
-		CCP_status.connection_status = NOT_CONNECTED;
-		answer[BYTE_POSITION_CRC] = CRC_PARAMETER_OUT_OF_RANGE;
-	}
-	answer[BYTE_POSITION_PID] = 0xFF;
-	answer[BYTE_POSITION_CTR] = *ptr_CRO_ctr;
-
-	send_DTO(answer);
 }
 
 
