@@ -24,10 +24,9 @@
  * Configure the CCP Driver
  */
 
-#define STATION_ADDRESS              0x00
+#define CCP_STATION_ADDRESS          0x00				/* $CCP_Station_Address */
 #define CCP_VERSION                  0x02
 #define CCP_SUBVERSION               0x01
-#define CONTROLER_ENDIANNESS		 LITTLE_ENDIANNESS
 
 /*
  *

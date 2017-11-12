@@ -38,7 +38,7 @@ void CCP_driver_init(void)
 	CCP_status.ptr_MTA_1 = 0;
 	CCP_status.MTA0_extention =0;
 	CCP_status.MTA1_extention =0;
-	CCP_status.station_address = STATION_ADDRESS;
+	CCP_status.station_address = CCP_STATION_ADDRESS;
 }
 
 void CRO_analyse(uint8_t * ptr_first_byte_cmd)
@@ -83,7 +83,7 @@ void callback_CONNECT(uint8_t * ptr_first_byte_cmd)
 		CRO_station_address = CRO_station_address + (*(ptr_first_byte_cmd + 2)) * 256;	// byte 4 little endian
 
 	// Check if the station ID is the correct one
-	if(CRO_station_address == STATION_ADDRESS)
+	if(CRO_station_address == CCP_STATION_ADDRESS)
 	{
 		CCP_status.connection_status = CONNECTED;
 		answer[BYTE_POSITION_CRC] = CRC_ACKNOWLEGE;
