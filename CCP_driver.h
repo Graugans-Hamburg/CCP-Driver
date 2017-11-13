@@ -24,9 +24,9 @@
  * Configure the CCP Driver
  */
 
-#define CCP_STATION_ADDRESS          0x00				/* $CCP_Station_Address */
-#define CCP_VERSION                  0x02
-#define CCP_SUBVERSION               0x01
+#define CCP_STATION_ADDRESS          0				/* $CCP_StationAddress */
+#define CCP_VERSION                  2
+#define CCP_SUBVERSION               1
 
 /*
  *

@@ -80,7 +80,7 @@ void callback_CONNECT(uint8_t * ptr_first_byte_cmd)
 	uint16_t CRO_station_address;
 
 		CRO_station_address = *(ptr_first_byte_cmd + 2);  								// byte 3 little endian
-		CRO_station_address = CRO_station_address + (*(ptr_first_byte_cmd + 2)) * 256;	// byte 4 little endian
+		CRO_station_address = CRO_station_address + (*(ptr_first_byte_cmd + 3)) * 256;	// byte 4 little endian
 
 	// Check if the station ID is the correct one
 	if(CRO_station_address == CCP_STATION_ADDRESS)
