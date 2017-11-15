@@ -27,6 +27,7 @@
 #define CCP_STATION_ADDRESS          0				/* $CCP_StationAddress */
 #define CCP_VERSION                  2
 #define CCP_SUBVERSION               1
+#define PROTECTION_MECHANISM	 	 0				/* 0="not active" 1="active"
 
 /*
  *
@@ -34,6 +35,13 @@
 
 #define NOT_CONNECTED				 0x00
 #define CONNECTED					 0x01
+#define OFF_LINE					 0x02
+
+
+#define UNPROTECTED					 0x00
+#define PROTECTED					 0x01
+#define TEMPORARY_DISCONNECT		 0x00
+#define END_OF_SESSION				 0x01
 #define BYTE_POSITION_CRC            0x01
 #define BYTE_POSITION_PID            0x00
 #define BYTE_POSITION_CTR            0x02
@@ -104,6 +112,7 @@ void CCP_driver_init(void);
 void CRO_analyse(uint8_t * ptr_first_byte_cmd);
 void send_DTO(uint8_t * ptr_first_byte_cmd);
 void callback_CONNECT(uint8_t * ptr_first_byte_cmd);
+void callback_DISCONNECT(uint8_t * ptr_first_byte_cmd);
 void callback_GET_CCP_VERSION(uint8_t * ptr_first_byte_cmd);
 void callback_SET_MTA(uint8_t * ptr_first_byte_cmd);
 void callback_UPLOAD(uint8_t * ptr_first_byte_cmd);

@@ -23,17 +23,20 @@
 static struct CCP_connection
 {
 	uint8_t connection_status;
+	uint8_t protection_status;
 	uint8_t * ptr_MTA_0;
 	uint8_t  MTA0_extention;
 	uint8_t * ptr_MTA_1;
 	uint8_t  MTA1_extention;
 	uint16_t station_address;
+
 } CCP_status;
 
 
 void CCP_driver_init(void)
 {
 	CCP_status.connection_status = NOT_CONNECTED;
+	CCP_status.protection_status = PROTECTED;
 	CCP_status.ptr_MTA_0 = 0;
 	CCP_status.ptr_MTA_1 = 0;
 	CCP_status.MTA0_extention =0;
@@ -64,6 +67,10 @@ void CRO_analyse(uint8_t * ptr_first_byte_cmd)
 			break;
 		case COMMAND_SHORT_UP:
 			callback_SHORT_UP(ptr_first_byte_cmd);
+			break;
+		case COMMAND_DISCONNECT:
+			callback_DISCONNECT(ptr_first_byte_cmd);
+			break;
 		default:
 
 			break;
@@ -74,18 +81,21 @@ void CRO_analyse(uint8_t * ptr_first_byte_cmd)
 void callback_CONNECT(uint8_t * ptr_first_byte_cmd)
 {
 	uint8_t answer[8];
-
-	uint8_t  *ptr_CRO_ctr = ptr_first_byte_cmd + 1;  // byte 2 Command Counter
-
+	uint8_t  *ptr_CRO_ctr = ptr_first_byte_cmd + 1;  			// byte 2 Command Counter
 	uint16_t CRO_station_address;
 
-		CRO_station_address = *(ptr_first_byte_cmd + 2);  								// byte 3 little endian
-		CRO_station_address = CRO_station_address + (*(ptr_first_byte_cmd + 3)) * 256;	// byte 4 little endian
+	CRO_station_address = *(ptr_first_byte_cmd + 2);  								// byte 3 little endian
+	CRO_station_address = CRO_station_address + (*(ptr_first_byte_cmd + 3)) * 256;	// byte 4 little endian
 
 	// Check if the station ID is the correct one
 	if(CRO_station_address == CCP_STATION_ADDRESS)
 	{
 		CCP_status.connection_status = CONNECTED;
+		#if PROTECTION_MECHANISM == PROTECTED
+		CCP_status.protection_status = PROTECTED;
+		#else
+		CCP_status.protection_status = UNPROTECTED;
+		#endif
 		answer[BYTE_POSITION_CRC] = CRC_ACKNOWLEGE;
 		answer[BYTE_POSITION_PID] = 0xFF;
 		answer[BYTE_POSITION_CTR] = *ptr_CRO_ctr;
@@ -94,13 +104,53 @@ void callback_CONNECT(uint8_t * ptr_first_byte_cmd)
 }
 
 
+void callback_DISCONNECT(uint8_t * ptr_first_byte_cmd)
+{
+	uint8_t answer[8];
+	uint8_t  *ptr_CRO_ctr = ptr_first_byte_cmd + 1;  // byte 2 Command Counter
+	uint8_t  *ptr_CRO_disconnet_kind = ptr_first_byte_cmd + 2;  // byte 3 Temporary(0) or EndofSession(1)
+	uint16_t CRO_station_address;
+
+	CRO_station_address = *(ptr_first_byte_cmd + 4);  								// byte 3 little endian
+	CRO_station_address = CRO_station_address + (*(ptr_first_byte_cmd + 5)) * 256;	// byte 4 little endian
+
+	// Check if the station ID is the correct one
+	if(CCP_status.connection_status == CONNECTED)
+	{
+		if(CRO_station_address == CCP_STATION_ADDRESS)
+		{
+			switch(*ptr_CRO_disconnet_kind)
+			{
+			case END_OF_SESSION:
+				answer[BYTE_POSITION_CRC] = CRC_ACKNOWLEGE;
+				CCP_status.connection_status = NOT_CONNECTED;
+				CCP_status.protection_status = UNPROTECTED;
+				break;
+			case TEMPORARY_DISCONNECT:
+				answer[BYTE_POSITION_CRC] = CRC_ACKNOWLEGE;
+				CCP_status.connection_status = OFF_LINE;
+				break;
+			default:
+				answer[BYTE_POSITION_CRC] = CRC_PARAMETER_OUT_OF_RANGE;
+			}
+		}
+		else
+		{
+			answer[BYTE_POSITION_CRC] = CRC_PARAMETER_OUT_OF_RANGE;
+		}
+		answer[BYTE_POSITION_PID] = 0xFF;
+		answer[BYTE_POSITION_CTR] = *ptr_CRO_ctr;
+		send_DTO(answer);
+	}
+}
+
 void callback_GET_CCP_VERSION(uint8_t * ptr_first_byte_cmd)
 {
 	uint8_t answer[8];
 
 	uint8_t *ptr_CRO_ctr              = ptr_first_byte_cmd + 1;  // byte 2 Command Counter
-	uint8_t *ptr_CRO_CCP_version      = ptr_first_byte_cmd + 2;  // byte 3
-	uint8_t *ptr_CRO_CCP_subversion   = ptr_first_byte_cmd + 3;  // byte 3
+	//uint8_t *ptr_CRO_CCP_version      = ptr_first_byte_cmd + 2;  // byte 3
+	//uint8_t *ptr_CRO_CCP_subversion   = ptr_first_byte_cmd + 3;  // byte 3
 
 	// Check if the station ID is the correct one
 	if(CCP_status.connection_status == CONNECTED)
@@ -132,36 +182,35 @@ void callback_SET_MTA(uint8_t * ptr_first_byte_cmd)
 
 
 	// Check if the station ID is the correct one
-	if(CCP_status.connection_status == CONNECTED)
+	if(CCP_status.connection_status == CONNECTED )
 	{
-		switch (*ptr_CRO_MTA_number)
-		{
-			case 0:
-				answer[BYTE_POSITION_CRC] = CRC_ACKNOWLEGE;
-				CCP_status.ptr_MTA_0 = *ptr_CRO_address;
-				CCP_status.MTA0_extention = *ptr_CRO_MTA_extention;
-				break;
-			case 1:
-				answer[BYTE_POSITION_CRC] = CRC_ACKNOWLEGE;
-				CCP_status.ptr_MTA_1 = *ptr_CRO_address;
-				CCP_status.MTA1_extention = *ptr_CRO_MTA_extention;
-				break;
-			default:
-				answer[BYTE_POSITION_CRC] = CRC_PARAMETER_OUT_OF_RANGE;
-				break;
-		}
-
 		answer[BYTE_POSITION_PID] = 0xFF;
 		answer[BYTE_POSITION_CTR] = *ptr_CRO_ctr;
-
+		if(CCP_status.protection_status == UNPROTECTED)
+		{
+			switch (*ptr_CRO_MTA_number)
+			{
+				case 0:
+					answer[BYTE_POSITION_CRC] = CRC_ACKNOWLEGE;
+					CCP_status.ptr_MTA_0 = (uint8_t *)(*ptr_CRO_address);
+					CCP_status.MTA0_extention = *ptr_CRO_MTA_extention;
+					break;
+				case 1:
+					answer[BYTE_POSITION_CRC] = CRC_ACKNOWLEGE;
+					CCP_status.ptr_MTA_1 = (uint8_t *)(*ptr_CRO_address);
+					CCP_status.MTA1_extention = *ptr_CRO_MTA_extention;
+					break;
+				default:
+					answer[BYTE_POSITION_CRC] = CRC_PARAMETER_OUT_OF_RANGE;
+					break;
+			}
+		}
+		else
+		{
+			answer[BYTE_POSITION_CTR] = CRC_ACCESS_LOCKED;
+		}
+		send_DTO(answer);
 	}
-	else
-	{
-		answer[BYTE_POSITION_PID] = 0xFF;
-		answer[BYTE_POSITION_CTR] = CRC_ACCESS_DENIED;
-
-	}
-	send_DTO(answer);
 }
 
 
@@ -173,23 +222,30 @@ void callback_UPLOAD(uint8_t * ptr_first_byte_cmd)
 	uint8_t *ptr_CRO_upload_size      = ptr_first_byte_cmd + 2;  // byte 3 Number of Bytes that shall be uploaded
 
 	// Check if the station ID is the correct one
-	if(CCP_status.connection_status == CONNECTED)
+	if(CCP_status.connection_status == CONNECTED )
 	{
-		uint8_t i;
-		if (*ptr_CRO_upload_size > 0 && *ptr_CRO_upload_size < 5)
+		answer[BYTE_POSITION_PID] = 0xFF;
+		answer[BYTE_POSITION_CTR] = *ptr_CRO_ctr;
+		if(CCP_status.protection_status == UNPROTECTED)
 		{
-			answer[BYTE_POSITION_CRC] = CRC_ACKNOWLEGE;
-			for(i = 0; i < *ptr_CRO_upload_size;i++ )
+			uint8_t i;
+			if (*ptr_CRO_upload_size > 0 && *ptr_CRO_upload_size < 5)
 			{
-				*(answer + BYTE_POSITION_DATA + i) = *(CCP_status.ptr_MTA_0++);
+				answer[BYTE_POSITION_CRC] = CRC_ACKNOWLEGE;
+				for(i = 0; i < *ptr_CRO_upload_size;i++ )
+				{
+					*(answer + BYTE_POSITION_DATA + i) = *(CCP_status.ptr_MTA_0++);
+				}
+			}
+			else
+			{
+				answer[BYTE_POSITION_CRC] = CRC_PARAMETER_OUT_OF_RANGE;
 			}
 		}
 		else
 		{
-			answer[BYTE_POSITION_CRC] = CRC_PARAMETER_OUT_OF_RANGE;
+			answer[BYTE_POSITION_CRC] = CRC_ACCESS_LOCKED;
 		}
-		answer[BYTE_POSITION_PID] = 0xFF;
-		answer[BYTE_POSITION_CTR] = *ptr_CRO_ctr;
 		send_DTO(answer);
 	}
 }
@@ -202,31 +258,39 @@ void callback_DNLOAD(uint8_t * ptr_first_byte_cmd)
 	uint8_t *ptr_CRO_dnload_size      = ptr_first_byte_cmd + 2;  // byte 3 Number of Bytes that shall be uploaded
 
 	// Check if the station ID is the correct one
-	if(CCP_status.connection_status == CONNECTED)
+	if(CCP_status.connection_status == CONNECTED )
 	{
-		uint8_t i;
-		if (*ptr_CRO_dnload_size > 0 && *ptr_CRO_dnload_size < 5)
+		answer[BYTE_POSITION_PID] = 0xFF;
+		answer[BYTE_POSITION_CTR] = *ptr_CRO_ctr;
+
+		if(CCP_status.protection_status == UNPROTECTED)
 		{
-			answer[BYTE_POSITION_CRC] = CRC_ACKNOWLEGE;
-			for(i = 0; i < *ptr_CRO_dnload_size;i++ )
+			uint8_t i;
+			if (*ptr_CRO_dnload_size > 0 && *ptr_CRO_dnload_size < 5)
 			{
-				*(CCP_status.ptr_MTA_0++) = *(ptr_first_byte_cmd + 3 + i);
+				answer[BYTE_POSITION_CRC] = CRC_ACKNOWLEGE;
+				for(i = 0; i < *ptr_CRO_dnload_size;i++ )
+				{
+					*(CCP_status.ptr_MTA_0++) = *(ptr_first_byte_cmd + 3 + i);
+				}
+				uint8_t *ptr_MTA0;
+				ptr_MTA0 = CCP_status.ptr_MTA_0;
+				uint32_t MTA0_Adress = &ptr_MTA0;
+				answer[BYTE_POSITION_ADDRESS_BYTE1] = (uint8_t)((MTA0_Adress & 0xFF000000) >> 24);
+				answer[BYTE_POSITION_ADDRESS_BYTE2] = (uint8_t)((MTA0_Adress & 0x00FF0000) >> 16);
+				answer[BYTE_POSITION_ADDRESS_BYTE3] = (uint8_t)((MTA0_Adress & 0x0000FF00) >> 8);
+				answer[BYTE_POSITION_ADDRESS_BYTE4] = (uint8_t)((MTA0_Adress & 0x000000FF) );
+				answer[BYTE_POSITION_ADDEXT]  = CCP_status.MTA0_extention;
 			}
-			uint8_t *ptr_MTA0;
-			ptr_MTA0 = CCP_status.ptr_MTA_0;
-			uint32_t MTA0_Adress = &ptr_MTA0;
-			answer[BYTE_POSITION_ADDRESS_BYTE1] = (uint8_t)((MTA0_Adress & 0xFF000000) >> 24);
-			answer[BYTE_POSITION_ADDRESS_BYTE2] = (uint8_t)((MTA0_Adress & 0x00FF0000) >> 16);
-			answer[BYTE_POSITION_ADDRESS_BYTE3] = (uint8_t)((MTA0_Adress & 0x0000FF00) >> 8);
-			answer[BYTE_POSITION_ADDRESS_BYTE4] = (uint8_t)((MTA0_Adress & 0x000000FF) );
-			answer[BYTE_POSITION_ADDEXT]  = CCP_status.MTA0_extention;
+			else
+			{
+				answer[BYTE_POSITION_CRC] = CRC_PARAMETER_OUT_OF_RANGE;
+			}
 		}
 		else
 		{
-			answer[BYTE_POSITION_CRC] = CRC_PARAMETER_OUT_OF_RANGE;
+			answer[BYTE_POSITION_CRC] = CRC_ACCESS_LOCKED;
 		}
-		answer[BYTE_POSITION_PID] = 0xFF;
-		answer[BYTE_POSITION_CTR] = *ptr_CRO_ctr;
 		send_DTO(answer);
 	}
 }
@@ -248,7 +312,11 @@ void callback_SHORT_UP(uint8_t * ptr_first_byte_cmd)
 	uint8_t * ptr_CRO_address = (uint8_t *)(*ptr_CRO_address_info);
 
 	// Check if the station ID is the correct one
-		if(CCP_status.connection_status == CONNECTED)
+	if(CCP_status.connection_status == CONNECTED)
+	{
+		answer[BYTE_POSITION_PID] = 0xFF;
+		answer[BYTE_POSITION_CTR] = *ptr_CRO_ctr;
+		if(CCP_status.protection_status == UNPROTECTED)
 		{
 			uint8_t i;
 			if (*ptr_CRO_upload_size > 0 && *ptr_CRO_upload_size < 5)
@@ -263,10 +331,15 @@ void callback_SHORT_UP(uint8_t * ptr_first_byte_cmd)
 			{
 				answer[BYTE_POSITION_CRC] = CRC_PARAMETER_OUT_OF_RANGE;
 			}
-			answer[BYTE_POSITION_PID] = 0xFF;
-			answer[BYTE_POSITION_CTR] = *ptr_CRO_ctr;
-			send_DTO(answer);
 		}
+		else
+		{
+			answer[BYTE_POSITION_CRC] = CRC_ACCESS_LOCKED;
+
+		}
+		send_DTO(answer);
+
+	}
 }
 
 /*
