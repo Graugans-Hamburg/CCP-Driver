@@ -14,6 +14,9 @@
  *
  *  Created on: Oct 9, 2016
  *      Author: Matthias Baumann
+ *
+ *      Verison number: v1.1
+ *      Git checksum:   only known in the released Version.
  */
 
 #include <inttypes.h>

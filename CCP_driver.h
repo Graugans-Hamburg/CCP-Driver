@@ -15,6 +15,9 @@
  *   Created on: Oct 9, 2016
  *      Author: Matthias Baumann
  *      email:  baumannmatthias@web.de
+ *
+ *      Verison number: v1.1
+ *      Git checksum:   only known in the released Version.
  */
 
 #ifndef _CCP_DRIVER_H_
@@ -24,21 +27,21 @@
  * Configure the CCP Driver
  */
 
-#define CCP_STATION_ADDRESS          0		/* $CCP_StationAddress */
-#define PROTECTION_MECHANISM	 	 0		/* 0="not active" 1="active" */
-#define PROTECT_PROGRAMMING		 	 1		/* 0="not active" 1="active"   Hint: No effect if PROTECTION_MECHANISM = 0 */
-#define PROTECT_CALIBRATION 	 	 1		/* 0="not active" 1="active"   Hint: No effect if PROTECTION_MECHANISM = 0 */
-#define PROTECT_DATA_AQUISITION	 	 1		/* 0="not active" 1="active"   Hint: No effect if PROTECTION_MECHANISM = 0 */
-#define CCP_PROGRAMMING              0		/* 0="not active" 1="active"   Hint: Can not be actived in current version */
-#define CCP_DATA_AQUISITION          0		/* 0="not active" 1="active"   Hint: Can not be actived in current version */
-#define CCP_CALIBRATION				 1      /* 0="not active" 1="active" */
+#define CCP_STATION_ADDRESS          0      /* $CCP_StationAddress */
+#define PROTECTION_MECHANISM         0      /* 0="not active" 1="active" */
+#define PROTECT_PROGRAMMING          1      /* 0="not active" 1="active"   Hint: No effect if PROTECTION_MECHANISM = 0 */
+#define PROTECT_CALIBRATION          1      /* 0="not active" 1="active"   Hint: No effect if PROTECTION_MECHANISM = 0 */
+#define PROTECT_DATA_AQUISITION      1      /* 0="not active" 1="active"   Hint: No effect if PROTECTION_MECHANISM = 0 */
+#define CCP_PROGRAMMING              0      /* 0="not active" 1="active"   Hint: Can not be actived in current version */
+#define CCP_DATA_AQUISITION          0      /* 0="not active" 1="active"   Hint: Can not be actived in current version */
+#define CCP_CALIBRATION              1      /* 0="not active" 1="active" */
 
 /*
  * Configure the following Part only if the command EXCHANGE_ID is required
  */
 
-#define LENGTH_OF_SLAVE_ID 			0	   /* Hint: Only positive numbers are allowed */
-#define DATATYPE_SLAVE_ID			0      /* Hint: implementation specific, here 0 is used for uint8 */
+#define LENGTH_OF_SLAVE_ID          0      /* Hint: Only positive numbers are allowed */
+#define DATATYPE_SLAVE_ID           0      /* Hint: implementation specific, here 0 is used for uint8 */
 /*
  * Information about the implemented CCP-Version
  */
@@ -49,15 +52,15 @@
  * Defines used inside the Code to avoid numbers
  */
 
-#define NOT_CONNECTED				  0x00
-#define CONNECTED					  0x01
-#define OFF_LINE					  0x02
+#define NOT_CONNECTED                 0x00
+#define CONNECTED                     0x01
+#define OFF_LINE                      0x02
 
 
-#define UNPROTECTED					  0x00
-#define PROTECTED					  0x01
-#define TEMPORARY_DISCONNECT		  0x00
-#define END_OF_SESSION				  0x01
+#define UNPROTECTED                   0x00
+#define PROTECTED                     0x01
+#define TEMPORARY_DISCONNECT          0x00
+#define END_OF_SESSION                0x01
 #define BYTE_POSITION_CRC             0x01
 #define BYTE_POSITION_PID             0x00
 #define BYTE_POSITION_CTR             0x02
@@ -69,7 +72,7 @@
 #define BYTE_POSITION_ADDRESS_BYTE2   0x05
 #define BYTE_POSITION_ADDRESS_BYTE3   0x06
 #define BYTE_POSITION_ADDRESS_BYTE4   0x07
-#define BYTE_POSITION_LENGTH_ID		  0x03
+#define BYTE_POSITION_LENGTH_ID       0x03
 #define BYTE_POSITION_DATATYPE_ID     0x04
 #define BYTE_POSITION_AVAILABLE_MASK  0x05
 #define BYTE_POSITION_PROTECTION_MASK 0x06
