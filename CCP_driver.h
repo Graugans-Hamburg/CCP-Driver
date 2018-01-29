@@ -27,7 +27,7 @@
  * Configure the CCP Driver
  */
 
-#define CCP_STATION_ADDRESS          0      /* $CCP_StationAddress */
+#define CCP_STATION_ADDRESS          0      /* $StationAddressCCP          Hint: Only positive numbers uint16_t are allowed*/
 #define PROTECTION_MECHANISM         0      /* 0="not active" 1="active" */
 #define PROTECT_PROGRAMMING          1      /* 0="not active" 1="active"   Hint: No effect if PROTECTION_MECHANISM = 0 */
 #define PROTECT_CALIBRATION          1      /* 0="not active" 1="active"   Hint: No effect if PROTECTION_MECHANISM = 0 */
