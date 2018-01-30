@@ -27,14 +27,14 @@
  * Configure the CCP Driver
  */
 
-#define CCP_STATION_ADDRESS          0      /* $StationAddressCCP          Hint: Only positive numbers uint16_t are allowed*/
-#define PROTECTION_MECHANISM         0      /* 0="not active" 1="active" */
+#define CCP_STATION_ADDRESS          0      /* $CCP_StationAddress$        Hint: Only positive uint16_t are allowed    */
+#define PROTECTION_MECHANISM         0      /* 0="not active" 1="active"                                               */
 #define PROTECT_PROGRAMMING          1      /* 0="not active" 1="active"   Hint: No effect if PROTECTION_MECHANISM = 0 */
 #define PROTECT_CALIBRATION          1      /* 0="not active" 1="active"   Hint: No effect if PROTECTION_MECHANISM = 0 */
 #define PROTECT_DATA_AQUISITION      1      /* 0="not active" 1="active"   Hint: No effect if PROTECTION_MECHANISM = 0 */
 #define CCP_PROGRAMMING              0      /* 0="not active" 1="active"   Hint: Can not be actived in current version */
 #define CCP_DATA_AQUISITION          0      /* 0="not active" 1="active"   Hint: Can not be actived in current version */
-#define CCP_CALIBRATION              1      /* 0="not active" 1="active" */
+#define CCP_CALIBRATION              1      /* 0="not active" 1="active"                                               */
 
 /*
  * Configure the following Part only if the command EXCHANGE_ID is required
